@@ -76,6 +76,7 @@ export default function Navbar() {
             href="/"
             onClick={() => setMobileMenu(false)}
             className="flex items-center gap-2"
+            aria-label="FitLog home"
           >
             <img
               src="/assets/logo.png"
@@ -89,11 +90,14 @@ export default function Navbar() {
           </Link>
 
           {/* DESKTOP NAVIGATION */}
-          <nav className="hidden items-center gap-8 md:flex">
-
+          <nav
+            aria-label="Main navigation"
+            className="hidden items-center gap-8 md:flex"
+          >
             {/* WORKOUT */}
             <Link
               href="/"
+              aria-current={isWorkoutActive ? "page" : undefined}
               className="text-[11px] font-semibold transition"
               style={{
                 color: isWorkoutActive
@@ -107,6 +111,7 @@ export default function Navbar() {
             {/* MY PLAN */}
             <Link
               href="/my-plan"
+              aria-current={isPlanActive ? "page" : undefined}
               className="text-[11px] font-semibold transition"
               style={{
                 color: isPlanActive
@@ -124,6 +129,7 @@ export default function Navbar() {
             {/* PLAN */}
             <Link
               href="/my-plan"
+              aria-label={`Today's plan, ${planCount} workouts`}
               className="flex items-center gap-2 rounded-full border border-[#292c31] bg-[#17191d] px-3 py-1.5 transition hover:border-[#44484f]"
             >
               <span className="text-[9px] font-semibold text-[#858991]">
@@ -138,6 +144,7 @@ export default function Navbar() {
             {/* SAVED */}
             <Link
               href="/my-plan"
+              aria-label={`Saved workouts, ${savedCount} workouts`}
               className="flex items-center gap-2 rounded-full border border-[#292c31] bg-[#17191d] px-3 py-1.5 transition hover:border-[#44484f]"
             >
               <span className="text-[9px] font-semibold text-[#858991]">
@@ -152,7 +159,12 @@ export default function Navbar() {
             {/* MOBILE MENU */}
             <button
               type="button"
-              aria-label="Toggle navigation menu"
+              aria-label={
+                mobileMenu
+                  ? "Close navigation menu"
+                  : "Open navigation menu"
+              }
+              aria-expanded={mobileMenu}
               onClick={() => setMobileMenu(!mobileMenu)}
               className="ml-1 flex h-8 w-8 items-center justify-center rounded-md border border-[#292c31] text-[#858991] md:hidden"
             >
@@ -168,12 +180,15 @@ export default function Navbar() {
         {/* MOBILE NAVIGATION */}
         {mobileMenu && (
           <div className="border-t border-[#292c31] py-4 md:hidden">
-            <nav className="flex flex-col gap-1">
-
+            <nav
+              aria-label="Mobile navigation"
+              className="flex flex-col gap-1"
+            >
               {/* MOBILE WORKOUT */}
               <Link
                 href="/"
                 onClick={() => setMobileMenu(false)}
+                aria-current={isWorkoutActive ? "page" : undefined}
                 className="rounded-md px-3 py-3 text-[11px] font-semibold"
                 style={{
                   color: isWorkoutActive
@@ -191,6 +206,7 @@ export default function Navbar() {
               <Link
                 href="/my-plan"
                 onClick={() => setMobileMenu(false)}
+                aria-current={isPlanActive ? "page" : undefined}
                 className="flex items-center justify-between rounded-md px-3 py-3 text-[11px] font-semibold"
                 style={{
                   color: isPlanActive
@@ -212,6 +228,7 @@ export default function Navbar() {
               <Link
                 href="/my-plan"
                 onClick={() => setMobileMenu(false)}
+                aria-label={`Saved workouts, ${savedCount} workouts`}
                 className="flex items-center justify-between rounded-md px-3 py-3 text-[11px] font-semibold text-[#858991]"
               >
                 <span>Saved</span>
@@ -220,7 +237,6 @@ export default function Navbar() {
                   {savedCount}
                 </span>
               </Link>
-
             </nav>
           </div>
         )}
