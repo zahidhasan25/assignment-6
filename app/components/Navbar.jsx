@@ -12,9 +12,7 @@ function getCount(key) {
   try {
     const stored = localStorage.getItem(key);
 
-    if (!stored) {
-      return 0;
-    }
+    if (!stored) return 0;
 
     const parsed = JSON.parse(stored);
 
@@ -34,7 +32,7 @@ export default function Navbar() {
   const isWorkoutActive =
     pathname === "/" || pathname.startsWith("/workout");
 
-  const isPlanActive = pathname.startsWith("/my-plan");
+  const isPlanActive = pathname === "/my-plan";
 
   function updateCounts() {
     setPlanCount(getCount(PLAN_KEY));
@@ -53,10 +51,7 @@ export default function Navbar() {
       handleStorageUpdate
     );
 
-    window.addEventListener(
-      "storage",
-      handleStorageUpdate
-    );
+    window.addEventListener("storage", handleStorageUpdate);
 
     return () => {
       window.removeEventListener(
@@ -74,14 +69,13 @@ export default function Navbar() {
   return (
     <header className="border-b border-[#292c31] bg-[#101113]">
       <div className="mx-auto max-w-[1400px] px-5 lg:px-8">
-
         <div className="flex h-[64px] items-center justify-between">
 
-          {/* Logo */}
+          {/* LOGO */}
           <Link
             href="/"
-            className="flex items-center gap-2"
             onClick={() => setMobileMenu(false)}
+            className="flex items-center gap-2"
           >
             <img
               src="/assets/logo.png"
@@ -94,37 +88,40 @@ export default function Navbar() {
             </span>
           </Link>
 
-          {/* Desktop Navigation */}
+          {/* DESKTOP NAVIGATION */}
           <nav className="hidden items-center gap-8 md:flex">
 
+            {/* WORKOUT */}
             <Link
               href="/"
-              className={`text-[11px] font-semibold transition ${
-                isWorkoutActive
-                  ? "text-[#b8f500]"
-                  : "text-[#858991] hover:text-[#f5f5f0]"
-              }`}
+              className="text-[11px] font-semibold transition"
+              style={{
+                color: isWorkoutActive
+                  ? "#b8f500"
+                  : "#858991",
+              }}
             >
               Workout
             </Link>
 
+            {/* MY PLAN */}
             <Link
               href="/my-plan"
-              className={`text-[11px] font-semibold transition ${
-                isPlanActive
-                  ? "text-[#b8f500]"
-                  : "text-[#858991] hover:text-[#f5f5f0]"
-              }`}
+              className="text-[11px] font-semibold transition"
+              style={{
+                color: isPlanActive
+                  ? "#b8f500"
+                  : "#858991",
+              }}
             >
               My Plan
             </Link>
-
           </nav>
 
-          {/* Right Side */}
+          {/* RIGHT SIDE */}
           <div className="flex items-center gap-2">
 
-            {/* Plan */}
+            {/* PLAN */}
             <Link
               href="/my-plan"
               className="flex items-center gap-2 rounded-full border border-[#292c31] bg-[#17191d] px-3 py-1.5 transition hover:border-[#44484f]"
@@ -138,7 +135,7 @@ export default function Navbar() {
               </span>
             </Link>
 
-            {/* Saved */}
+            {/* SAVED */}
             <Link
               href="/my-plan"
               className="flex items-center gap-2 rounded-full border border-[#292c31] bg-[#17191d] px-3 py-1.5 transition hover:border-[#44484f]"
@@ -152,7 +149,7 @@ export default function Navbar() {
               </span>
             </Link>
 
-            {/* Mobile Menu */}
+            {/* MOBILE MENU */}
             <button
               type="button"
               aria-label="Toggle navigation menu"
@@ -165,36 +162,44 @@ export default function Navbar() {
                 <Menu size={15} />
               )}
             </button>
-
           </div>
         </div>
 
-        {/* Mobile Navigation */}
+        {/* MOBILE NAVIGATION */}
         {mobileMenu && (
           <div className="border-t border-[#292c31] py-4 md:hidden">
-
             <nav className="flex flex-col gap-1">
 
+              {/* MOBILE WORKOUT */}
               <Link
                 href="/"
                 onClick={() => setMobileMenu(false)}
-                className={`rounded-md px-3 py-3 text-[11px] font-semibold ${
-                  isWorkoutActive
-                    ? "bg-[#17191d] text-[#b8f500]"
-                    : "text-[#858991]"
-                }`}
+                className="rounded-md px-3 py-3 text-[11px] font-semibold"
+                style={{
+                  color: isWorkoutActive
+                    ? "#b8f500"
+                    : "#858991",
+                  backgroundColor: isWorkoutActive
+                    ? "#17191d"
+                    : "transparent",
+                }}
               >
                 Workout
               </Link>
 
+              {/* MOBILE MY PLAN */}
               <Link
                 href="/my-plan"
                 onClick={() => setMobileMenu(false)}
-                className={`flex items-center justify-between rounded-md px-3 py-3 text-[11px] font-semibold ${
-                  isPlanActive
-                    ? "bg-[#17191d] text-[#b8f500]"
-                    : "text-[#858991]"
-                }`}
+                className="flex items-center justify-between rounded-md px-3 py-3 text-[11px] font-semibold"
+                style={{
+                  color: isPlanActive
+                    ? "#b8f500"
+                    : "#858991",
+                  backgroundColor: isPlanActive
+                    ? "#17191d"
+                    : "transparent",
+                }}
               >
                 <span>My Plan</span>
 
@@ -203,6 +208,7 @@ export default function Navbar() {
                 </span>
               </Link>
 
+              {/* MOBILE SAVED */}
               <Link
                 href="/my-plan"
                 onClick={() => setMobileMenu(false)}
@@ -216,10 +222,8 @@ export default function Navbar() {
               </Link>
 
             </nav>
-
           </div>
         )}
-
       </div>
     </header>
   );
