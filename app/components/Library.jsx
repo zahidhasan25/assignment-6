@@ -41,6 +41,7 @@ function getWorkoutList(data) {
 
 function getNumber(value) {
   const number = Number(value);
+
   return Number.isFinite(number) ? number : 0;
 }
 
@@ -65,7 +66,6 @@ export default function Library() {
         }
 
         const data = await response.json();
-
         const workoutList = getWorkoutList(data);
 
         setWorkouts(workoutList);
@@ -183,7 +183,9 @@ export default function Library() {
 
               <div className="space-y-3 p-5">
                 <div className="h-3 w-20 animate-pulse rounded bg-[#292c31]" />
+
                 <div className="h-5 w-3/4 animate-pulse rounded bg-[#292c31]" />
+
                 <div className="h-3 w-1/2 animate-pulse rounded bg-[#292c31]" />
 
                 <div className="flex gap-4 pt-2">
@@ -243,6 +245,7 @@ export default function Library() {
                     <img
                       src={workout.image}
                       alt={workout.name}
+                      loading="lazy"
                       className="h-full w-full object-cover transition duration-300 group-hover:scale-[1.03]"
                     />
 
