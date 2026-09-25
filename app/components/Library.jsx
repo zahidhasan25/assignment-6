@@ -1,16 +1,48 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import Link from "next/link";
-import {
-  ChevronDown,
-  Clock3,
-  Flame,
-  Star,
-  ArrowRight,
-} from "lucide-react";
+import { ChevronDown, Clock3, Flame, Star } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
 
-const API_URL = "/api/fitlog";
+const SORT_OPTIONS = [
+  {
+    value: "duration",
+    label: "Duration",
+  },
+  {
+    value: "calories",
+    label: "Calories",
+  },
+  {
+    value: "rating",
+    label: "Rating",
+  },
+];
+
+function getWorkoutList(data) {
+  if (Array.isArray(data)) {
+    return data;
+  }
+
+  if (Array.isArray(data?.data)) {
+    return data.data;
+  }
+
+  if (Array.isArray(data?.workouts)) {
+    return data.workouts;
+  }
+
+  if (Array.isArray(data?.results)) {
+    return data.results;
+  }
+
+  return [];
+}
+
+function getNumber(value) {
+  const number = Number(value);
+  return Number.isFinite(number) ? number : 0;
+}
 
 export default function Library() {
   const [workouts, setWorkouts] = useState([]);
@@ -18,67 +50,82 @@ export default function Library() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  async function fetchWorkouts() {
-    try {
-      setLoading(true);
-      setError("");
-
-      const response = await fetch(API_URL, {
-        cache: "no-store",
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to fetch workouts");
-      }
-
-      const data = await response.json();
-
-      if (!Array.isArray(data)) {
-        throw new Error("Invalid workout data");
-      }
-
-      setWorkouts(data);
-    } catch (err) {
-      console.error(err);
-      setError("Unable to load workouts. Please try again.");
-    } finally {
-      setLoading(false);
-    }
-  }
-
   useEffect(() => {
+    async function fetchWorkouts() {
+      try {
+        setLoading(true);
+        setError("");
+
+        const response = await fetch("/api/fitlog", {
+          cache: "no-store",
+        });
+
+        if (!response.ok) {
+          throw new Error("Failed to load workouts.");
+        }
+
+        const data = await response.json();
+
+        const workoutList = getWorkoutList(data);
+
+        setWorkouts(workoutList);
+      } catch (err) {
+        console.error("Library fetch error:", err);
+
+        setError(
+          "Unable to load workouts right now. Please try again."
+        );
+      } finally {
+        setLoading(false);
+      }
+    }
+
     fetchWorkouts();
   }, []);
 
-  const sortedWorkouts = [...workouts].sort((a, b) => {
+  const sortedWorkouts = useMemo(() => {
+    const list = [...workouts];
+
     if (sortBy === "duration") {
-      return a.duration - b.duration;
+      return list.sort(
+        (a, b) =>
+          getNumber(a.duration) -
+          getNumber(b.duration)
+      );
     }
 
     if (sortBy === "calories") {
-      return b.caloriesBurned - a.caloriesBurned;
+      return list.sort(
+        (a, b) =>
+          getNumber(b.caloriesBurned) -
+          getNumber(a.caloriesBurned)
+      );
     }
 
     if (sortBy === "rating") {
-      return b.rating - a.rating;
+      return list.sort(
+        (a, b) =>
+          getNumber(b.rating) -
+          getNumber(a.rating)
+      );
     }
 
-    return 0;
-  });
+    return list;
+  }, [workouts, sortBy]);
 
   return (
     <section
       id="library"
-      className="mx-auto max-w-[1400px] px-5 pb-20 pt-16 lg:px-8"
+      className="mx-auto max-w-[1400px] px-5 py-14 lg:px-8 lg:py-16"
     >
-      {/* Header */}
+      {/* SECTION HEADER */}
       <div className="mb-8 flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <p className="mb-2 text-[9px] font-bold uppercase tracking-[0.2em] text-[#b8f500]">
-            Workout Library
+          <p className="mb-3 text-[9px] font-bold uppercase tracking-[0.2em] text-[#b8f500]">
+            Training Library
           </p>
 
-          <h2 className="text-[28px] font-black uppercase tracking-[-0.02em] text-[#f5f5f0] sm:text-[32px]">
+          <h2 className="text-3xl font-black uppercase tracking-[-0.03em] text-[#f5f5f0] sm:text-4xl">
             The Library
           </h2>
 
@@ -87,155 +134,195 @@ export default function Library() {
           </p>
         </div>
 
-        {/* Sort */}
-        <div className="relative w-full sm:w-[170px]">
-          <select
-            value={sortBy}
-            onChange={(event) => setSortBy(event.target.value)}
-            className="w-full appearance-none rounded-md border border-[#292c31] bg-[#17191d] px-4 py-3 pr-10 text-[10px] font-semibold uppercase tracking-wide text-[#f5f5f0] outline-none transition focus:border-[#b8f500]"
-            aria-label="Sort workouts"
+        {/* SORT DROPDOWN */}
+        <div className="relative w-full sm:w-[180px]">
+          <label
+            htmlFor="workout-sort"
+            className="mb-2 block text-[8px] font-bold uppercase tracking-[0.16em] text-[#858991]"
           >
-            <option value="duration">Duration</option>
-            <option value="calories">Calories</option>
-            <option value="rating">Rating</option>
-          </select>
+            Sort by
+          </label>
 
-          <ChevronDown
-            size={14}
-            className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[#858991]"
-          />
+          <div className="relative">
+            <select
+              id="workout-sort"
+              value={sortBy}
+              onChange={(event) =>
+                setSortBy(event.target.value)
+              }
+              className="h-10 w-full appearance-none rounded-md border border-[#292c31] bg-[#17191d] px-3 pr-9 text-[10px] font-semibold text-[#f5f5f0] outline-none transition hover:border-[#44484f] focus:border-[#b8f500]"
+            >
+              {SORT_OPTIONS.map((option) => (
+                <option
+                  key={option.value}
+                  value={option.value}
+                  className="bg-[#17191d] text-[#f5f5f0]"
+                >
+                  {option.label}
+                </option>
+              ))}
+            </select>
+
+            <ChevronDown
+              size={14}
+              className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[#858991]"
+            />
+          </div>
         </div>
       </div>
 
-      {/* Loading */}
+      {/* LOADING */}
       {loading && (
-        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-          {[...Array(6)].map((_, index) => (
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+          {Array.from({ length: 12 }).map((_, index) => (
             <div
               key={index}
-              className="animate-pulse overflow-hidden rounded-xl border border-[#292c31] bg-[#17191d]"
+              className="overflow-hidden rounded-xl border border-[#292c31] bg-[#17191d]"
             >
-              <div className="h-[230px] bg-[#1d2025]" />
+              <div className="h-[220px] animate-pulse bg-[#1d2025]" />
 
-              <div className="space-y-4 p-5">
-                <div className="h-3 w-24 rounded bg-[#292c31]" />
-                <div className="h-5 w-40 rounded bg-[#292c31]" />
-                <div className="h-3 w-28 rounded bg-[#292c31]" />
-                <div className="h-3 w-full rounded bg-[#292c31]" />
+              <div className="space-y-3 p-5">
+                <div className="h-3 w-20 animate-pulse rounded bg-[#292c31]" />
+                <div className="h-5 w-3/4 animate-pulse rounded bg-[#292c31]" />
+                <div className="h-3 w-1/2 animate-pulse rounded bg-[#292c31]" />
+
+                <div className="flex gap-4 pt-2">
+                  <div className="h-3 w-14 animate-pulse rounded bg-[#292c31]" />
+                  <div className="h-3 w-14 animate-pulse rounded bg-[#292c31]" />
+                  <div className="h-3 w-10 animate-pulse rounded bg-[#292c31]" />
+                </div>
               </div>
             </div>
           ))}
         </div>
       )}
 
-      {/* Error */}
+      {/* ERROR */}
       {!loading && error && (
-        <div className="rounded-xl border border-red-900/50 bg-[#17191d] px-6 py-12 text-center">
-          <p className="text-sm font-semibold text-red-400">
+        <div className="rounded-xl border border-[#292c31] bg-[#17191d] px-5 py-12 text-center">
+          <p className="text-sm font-bold uppercase text-[#f5f5f0]">
+            Something went wrong
+          </p>
+
+          <p className="mt-2 text-xs text-[#858991]">
             {error}
           </p>
 
           <button
             type="button"
-            onClick={fetchWorkouts}
-            className="mt-5 rounded-md bg-[#b8f500] px-5 py-2.5 text-[10px] font-black uppercase text-black"
+            onClick={() => window.location.reload()}
+            className="mt-5 rounded-md bg-[#b8f500] px-5 py-3 text-[9px] font-black uppercase text-black"
           >
             Try Again
           </button>
         </div>
       )}
 
-      {/* Workout Grid */}
-      {!loading && !error && (
-        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-          {sortedWorkouts.map((workout) => (
-            <Link
-              href={`/workout/${workout.id}`}
-              key={workout.id}
-              className="group overflow-hidden rounded-xl border border-[#292c31] bg-[#17191d] transition duration-300 hover:-translate-y-1 hover:border-[#41454c]"
-            >
-              {/* Image */}
-              <div className="relative h-[230px] overflow-hidden bg-[#1d2025]">
-                <img
-                  src={workout.image}
-                  alt={workout.name}
-                  className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
-                />
+      {/* WORKOUT GRID */}
+      {!loading &&
+        !error &&
+        sortedWorkouts.length > 0 && (
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+            {sortedWorkouts.map((workout) => {
+              const categories = Array.isArray(
+                workout.muscleGroups
+              )
+                ? workout.muscleGroups
+                : workout.category
+                  ? [workout.category]
+                  : [];
 
-                {/* Difficulty */}
-                <div className="absolute left-4 top-4">
-                  <span className="rounded-full border border-[#ffffff1a] bg-[#101113dd] px-3 py-1.5 text-[8px] font-bold uppercase tracking-wide text-[#b8f500] backdrop-blur-sm">
-                    {workout.difficulty}
-                  </span>
-                </div>
-
-                {/* Arrow */}
-                <div className="absolute bottom-4 right-4 flex h-8 w-8 items-center justify-center rounded-full bg-[#b8f500] text-black opacity-0 transition duration-300 group-hover:opacity-100">
-                  <ArrowRight size={14} />
-                </div>
-              </div>
-
-              {/* Content */}
-              <div className="p-5">
-                {/* Muscle Groups */}
-                <div className="mb-3 flex flex-wrap gap-1.5">
-                  {workout.muscleGroups.map((muscle) => (
-                    <span
-                      key={muscle}
-                      className="rounded-full border border-[#292c31] bg-[#101113] px-2.5 py-1 text-[8px] font-semibold uppercase tracking-wide text-[#858991]"
-                    >
-                      {muscle}
-                    </span>
-                  ))}
-                </div>
-
-                {/* Name */}
-                <h3 className="text-[18px] font-black uppercase tracking-[-0.01em] text-[#f5f5f0] transition group-hover:text-[#b8f500]">
-                  {workout.name}
-                </h3>
-
-                {/* Equipment */}
-                <p className="mt-2 text-[10px] font-medium text-[#858991]">
-                  Equipment:{" "}
-                  <span className="text-[#b7b9bd]">
-                    {workout.equipment}
-                  </span>
-                </p>
-
-                {/* Stats */}
-                <div className="mt-5 flex items-center gap-4 border-t border-[#292c31] pt-4">
-                  <div className="flex items-center gap-1.5">
-                    <Clock3 size={13} className="text-[#858991]" />
-
-                    <span className="text-[9px] font-semibold text-[#b7b9bd]">
-                      {workout.duration} min
-                    </span>
-                  </div>
-
-                  <div className="flex items-center gap-1.5">
-                    <Flame size={13} className="text-[#858991]" />
-
-                    <span className="text-[9px] font-semibold text-[#b7b9bd]">
-                      {workout.caloriesBurned} kcal
-                    </span>
-                  </div>
-
-                  <div className="ml-auto flex items-center gap-1.5">
-                    <Star
-                      size={13}
-                      className="fill-[#b8f500] text-[#b8f500]"
+              return (
+                <Link
+                  key={workout.id}
+                  href={`/workout/${workout.id}`}
+                  className="group overflow-hidden rounded-xl border border-[#292c31] bg-[#17191d] transition duration-200 hover:-translate-y-0.5 hover:border-[#44484f]"
+                >
+                  {/* IMAGE */}
+                  <div className="relative h-[220px] overflow-hidden bg-[#1d2025]">
+                    <img
+                      src={workout.image}
+                      alt={workout.name}
+                      className="h-full w-full object-cover transition duration-300 group-hover:scale-[1.03]"
                     />
 
-                    <span className="text-[9px] font-bold text-[#f5f5f0]">
-                      {workout.rating}
-                    </span>
+                    <div className="absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-[#17191d] to-transparent" />
+
+                    {/* CATEGORY */}
+                    {categories.length > 0 && (
+                      <div className="absolute left-4 top-4 flex max-w-[80%] flex-wrap gap-1.5">
+                        {categories.slice(0, 2).map((category) => (
+                          <span
+                            key={category}
+                            className="rounded-full border border-[#b8f500]/30 bg-[#101113]/80 px-2.5 py-1 text-[8px] font-bold uppercase tracking-wide text-[#b8f500] backdrop-blur-sm"
+                          >
+                            {category}
+                          </span>
+                        ))}
+                      </div>
+                    )}
                   </div>
-                </div>
-              </div>
-            </Link>
-          ))}
-        </div>
-      )}
+
+                  {/* CONTENT */}
+                  <div className="p-5">
+                    <h3 className="text-[17px] font-black uppercase leading-tight text-[#f5f5f0]">
+                      {workout.name}
+                    </h3>
+
+                    <p className="mt-2 text-[10px] text-[#858991]">
+                      Equipment:{" "}
+                      <span className="text-[#c8c9c5]">
+                        {workout.equipment || "N/A"}
+                      </span>
+                    </p>
+
+                    {/* STATS */}
+                    <div className="mt-5 flex items-center gap-4 border-t border-[#292c31] pt-4">
+                      <div className="flex items-center gap-1.5 text-[9px] text-[#858991]">
+                        <Clock3 size={12} />
+                        <span>
+                          {workout.duration} min
+                        </span>
+                      </div>
+
+                      <div className="flex items-center gap-1.5 text-[9px] text-[#858991]">
+                        <Flame size={12} />
+                        <span>
+                          {workout.caloriesBurned} kcal
+                        </span>
+                      </div>
+
+                      <div className="flex items-center gap-1.5 text-[9px] text-[#b8f500]">
+                        <Star
+                          size={12}
+                          fill="currentColor"
+                        />
+                        <span>
+                          {workout.rating}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </Link>
+              );
+            })}
+          </div>
+        )}
+
+      {/* EMPTY */}
+      {!loading &&
+        !error &&
+        sortedWorkouts.length === 0 && (
+          <div className="rounded-xl border border-[#292c31] bg-[#17191d] px-5 py-14 text-center">
+            <p className="text-[10px] font-black uppercase tracking-[0.18em] text-[#b8f500]">
+              Nothing Found
+            </p>
+
+            <p className="mt-3 text-sm text-[#858991]">
+              No workouts are available right now.
+            </p>
+          </div>
+        )}
     </section>
   );
 }
